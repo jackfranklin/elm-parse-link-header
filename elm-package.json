@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
     "summary": "Parse HTTP Link headers",
-    "repository": "https://github.com/jackfranklin/elm-link-header.git",
+    "repository": "https://github.com/jackfranklin/elm-parse-link-header.git",
     "license": "BSD3",
     "source-directories": [
         "."

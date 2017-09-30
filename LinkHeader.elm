@@ -1,4 +1,14 @@
-module LinkHeader exposing (WebLink, LinkRel(..), parse)
+module LinkHeader
+    exposing
+        ( WebLink
+        , LinkRel(..)
+        , parse
+        , getIntegerForRel
+        , webLinkIsNext
+        , webLinkIsPrev
+        , webLinkIsFirst
+        , webLinkIsLast
+        )
 
 {-| This library provides the ability to parse Link headers returned from APIs.
 
@@ -7,6 +17,10 @@ module LinkHeader exposing (WebLink, LinkRel(..), parse)
 
 # Parsing
 @docs parse
+
+# Reading results
+
+@docs webLinkIsNext, webLinkIsPrev, webLinkIsFirst, webLinkIsLast, getIntegerForRel
 -}
 
 import Regex
@@ -42,6 +56,76 @@ parse str =
         |> List.concat
         |> List.map regexMatchToWebLink
         |> List.filterMap identity
+
+
+{-| Takes a `LinkRel` and finds the number for the page
+    getIntegerForRel (RelPrev 2) == 2
+-}
+getIntegerForRel : LinkRel -> Int
+getIntegerForRel linkRel =
+    case linkRel of
+        RelFirst x ->
+            x
+
+        RelLast x ->
+            x
+
+        RelNext x ->
+            x
+
+        RelPrev x ->
+            x
+
+        RelUnknown x ->
+            x
+
+
+{-| Tells you if a given `WebLink` is first.
+-}
+webLinkIsFirst : WebLink -> Bool
+webLinkIsFirst link =
+    case link.rel of
+        RelFirst _ ->
+            True
+
+        _ ->
+            False
+
+
+{-| Tells you if a given `WebLink` is last.
+-}
+webLinkIsLast : WebLink -> Bool
+webLinkIsLast link =
+    case link.rel of
+        RelLast _ ->
+            True
+
+        _ ->
+            False
+
+
+{-| Tells you if a given `WebLink` is the next link.
+-}
+webLinkIsNext : WebLink -> Bool
+webLinkIsNext link =
+    case link.rel of
+        RelNext _ ->
+            True
+
+        _ ->
+            False
+
+
+{-| Tells you if a given `WebLink` is the prev link.
+-}
+webLinkIsPrev : WebLink -> Bool
+webLinkIsPrev link =
+    case link.rel of
+        RelPrev _ ->
+            True
+
+        _ ->
+            False
 
 
 relStringToType : String -> Int -> LinkRel

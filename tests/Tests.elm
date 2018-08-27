@@ -1,8 +1,8 @@
-module Tests exposing (..)
+module Tests exposing (header, lastUrl, nextUrl, suite)
 
 import Expect exposing (Expectation)
-import Test exposing (..)
 import LinkHeader exposing (LinkRel(..))
+import Test exposing (..)
 
 
 nextUrl : String
@@ -17,7 +17,7 @@ lastUrl =
 
 header : String
 header =
-    Debug.log "header" ("<" ++ nextUrl ++ ">; rel=\"next\", <" ++ lastUrl ++ ">; rel=\"last\"")
+    "<" ++ nextUrl ++ ">; rel=\"next\", <" ++ lastUrl ++ ">; rel=\"last\""
 
 
 suite : Test
@@ -29,7 +29,7 @@ suite =
         , test "When given a header it can parse it" <|
             \() ->
                 Expect.equal (LinkHeader.parse header)
-                    [ (LinkHeader.WebLink (RelNext 2) nextUrl)
-                    , (LinkHeader.WebLink (RelLast 3) lastUrl)
+                    [ LinkHeader.WebLink (RelNext 2) nextUrl
+                    , LinkHeader.WebLink (RelLast 3) lastUrl
                     ]
         ]

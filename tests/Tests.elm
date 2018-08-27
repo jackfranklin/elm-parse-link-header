@@ -17,7 +17,7 @@ lastUrl =
 
 header : String
 header =
-    Debug.log "header" ("<" ++ nextUrl ++ ">; rel=\"next\", <" ++ lastUrl ++ ">; rel=\"last\"")
+    "<" ++ nextUrl ++ ">; rel=\"next\", <" ++ lastUrl ++ ">; rel=\"last\""
 
 
 suite : Test

@@ -1,0 +1,27 @@
+{
+  "name": "elm-parse-link-header",
+  "version": "1.0.0",
+  "description": "``` elm package install jackfranklin/elm-parse-link-header ```",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jackfranklin/elm-parse-link-header.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jackfranklin/elm-parse-link-header/issues"
+  },
+  "homepage": "https://github.com/jackfranklin/elm-parse-link-header#readme",
+  "devDependencies": {
+    "elm": "^0.18.0",
+    "elm-format": "^0.8.0"
+  }
+}

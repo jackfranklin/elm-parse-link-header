@@ -1,12 +1,20 @@
-module LinkHeader exposing (WebLink, LinkRel(..), parse)
+module LinkHeader exposing
+    ( WebLink, LinkRel(..)
+    , parse
+    )
 
 {-| This library provides the ability to parse Link headers returned from APIs.
 
+
 # Types
+
 @docs WebLink, LinkRel
 
+
 # Parsing
+
 @docs parse
+
 -}
 
 import Regex
@@ -32,7 +40,7 @@ type alias WebLink =
 
 {-| Parse is given the string, which should be the entire `link` header from your API
 and returns a list of `WebLink`s. This will be empty if no matches were found.
-    parse "<https://api.github.com/user/193238/repos?per_page=100&page=2>; rel=\"next\""  == [WebLink (RelNext 2) "https://api.github.com/user/193238/repos?per_page=100&page=2"]
+parse "[https://api.github.com/user/193238/repos?per\_page=100&page=2](https://api.github.com/user/193238/repos?per_page=100&page=2); rel="next"" == [WebLink (RelNext 2) "[https://api.github.com/user/193238/repos?per\_page=100&page=2"](https://api.github.com/user/193238/repos?per_page=100&page=2")][WebLink (RelNext 2) "https://api.github.com/user/193238/repos?per_page=100&page=2"]
 -}
 parse : String -> List WebLink
 parse str =
@@ -67,7 +75,7 @@ regexMatchToWebLink : Regex.Match -> Maybe WebLink
 regexMatchToWebLink match =
     case ( match.submatches, getUrlFromLink match.match ) of
         ( [ Just pageNumber, Just rel ], Just url ) ->
-            case (String.toInt pageNumber) of
+            case String.toInt pageNumber of
                 Ok pageNum ->
                     Just { rel = relStringToType rel pageNum, url = url }
 

@@ -103,14 +103,14 @@ removeTokens str =
 
 headerParserForUrl : Parser String
 headerParserForUrl =
-    (Parser.getChompedString <|
-        (Parser.succeed ()
-            |. Parser.symbol "<"
-            |. Parser.chompUntil ">"
-            |. Parser.symbol ">"
-        )
-    )
-        |> Parser.andThen (Parser.succeed << removeTokens)
+    Parser.succeed identity
+        |. Parser.symbol "<"
+        |= Parser.variable
+            { start = Char.isLower
+            , inner = (/=) '>'
+            , reserved = Set.empty
+            }
+        |. Parser.symbol ">"
 
 
 parsePageAndRel : Parser { page : Int, rel : String }

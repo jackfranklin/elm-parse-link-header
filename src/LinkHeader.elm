@@ -94,52 +94,34 @@ type alias HeaderMatch =
     }
 
 
-removeTokens : String -> String
-removeTokens str =
-    str
-        |> String.replace "<" ""
-        |> String.replace ">" ""
-
-
-headerParserForUrl : Parser String
-headerParserForUrl =
-    Parser.succeed identity
-        |. Parser.symbol "<"
-        |= Parser.variable
-            { start = Char.isLower
-            , inner = (/=) '>'
-            , reserved = Set.empty
+headerParser : Parser HeaderMatch
+headerParser =
+    Parser.succeed
+        (\urlStart page urlEnd source rel ->
+            { page = page
+            , url = String.slice urlStart urlEnd source
+            , rel = rel
             }
-        |. Parser.symbol ">"
-
-
-parsePageAndRel : Parser { page : Int, rel : String }
-parsePageAndRel =
-    Parser.succeed (\p r -> { page = p, rel = r })
+        )
+        |. Parser.symbol "<"
+        |= Parser.getOffset
         |. Parser.chompUntil "&page="
         |. Parser.token "&page="
         |= Parser.int
+        |= Parser.getOffset
+        |= Parser.getSource
+        |. Parser.chompUntil ">"
+        |. Parser.symbol ">"
         |. Parser.chompUntil "rel="
         |. Parser.token "rel="
         |. Parser.symbol "\""
-        |= Parser.variable { start = Char.isLower, inner = Char.isAlpha, reserved = Set.fromList [] }
-
-
-parseDetails : String -> String -> Parser HeaderMatch
-parseDetails originalInputString details =
-    case Parser.run parsePageAndRel originalInputString of
-        Err e ->
-            Parser.problem "Problem parsing details"
-
-        Ok { page, rel } ->
-            Parser.succeed { page = page, rel = rel, url = details }
-
-
-headerParser : String -> Parser HeaderMatch
-headerParser originalInputString =
-    headerParserForUrl |> Parser.andThen (parseDetails originalInputString)
+        |= Parser.variable
+            { start = Char.isLower
+            , inner = Char.isAlpha
+            , reserved = Set.fromList []
+            }
 
 
 parseHeader : String -> Result (List Parser.DeadEnd) HeaderMatch
 parseHeader header =
-    Parser.run (headerParser header) header
+    Parser.run headerParser header

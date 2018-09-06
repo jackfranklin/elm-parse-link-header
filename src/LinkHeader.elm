@@ -19,6 +19,9 @@ module LinkHeader exposing
 
 import Parser exposing ((|.), (|=), Parser)
 import Set
+import Url
+import Url.Parser
+import Url.Parser.Query
 
 
 {-| The possible types of web links that this parser might produce.
@@ -58,14 +61,6 @@ parse str =
         |> List.map String.trim
         |> List.map parseHeader
         |> List.filterMap Result.toMaybe
-        |> List.map toWebLink
-
-
-toWebLink : HeaderMatch -> WebLink
-toWebLink headerMatch =
-    { url = headerMatch.url
-    , rel = relStringToType headerMatch.rel headerMatch.page
-    }
 
 
 relStringToType : String -> Int -> LinkRel
@@ -87,23 +82,9 @@ relStringToType string page =
             RelUnknown page
 
 
-type alias HeaderMatch =
-    { page : Int
-    , rel : String
-    , url : String
-    }
-
-
-removeTokens : String -> String
-removeTokens str =
-    str
-        |> String.replace "<" ""
-        |> String.replace ">" ""
-
-
-headerParserForUrl : Parser String
-headerParserForUrl =
-    Parser.succeed identity
+initialParser : Parser { url : String, rel : String }
+initialParser =
+    Parser.succeed (\u r -> { url = u, rel = r })
         |. Parser.symbol "<"
         |= Parser.variable
             { start = Char.isLower
@@ -111,35 +92,45 @@ headerParserForUrl =
             , reserved = Set.empty
             }
         |. Parser.symbol ">"
-
-
-parsePageAndRel : Parser { page : Int, rel : String }
-parsePageAndRel =
-    Parser.succeed (\p r -> { page = p, rel = r })
-        |. Parser.chompUntil "&page="
-        |. Parser.token "&page="
-        |= Parser.int
-        |. Parser.chompUntil "rel="
-        |. Parser.token "rel="
+        |. Parser.symbol ";"
+        |. Parser.spaces
+        |. Parser.keyword "rel="
         |. Parser.symbol "\""
-        |= Parser.variable { start = Char.isLower, inner = Char.isAlpha, reserved = Set.fromList [] }
+        |= Parser.variable
+            { start = Char.isLower
+            , inner = Char.isAlpha
+            , reserved = Set.empty
+            }
+        |. Parser.symbol "\""
+        |. Parser.end
 
 
-parseDetails : String -> String -> Parser HeaderMatch
-parseDetails originalInputString details =
-    case Parser.run parsePageAndRel originalInputString of
-        Err e ->
-            Parser.problem "Problem parsing details"
+linkParser : { url : String, rel : String } -> Parser WebLink
+linkParser { url, rel } =
+    let
+        urlParser =
+            Url.Parser.query (Url.Parser.Query.int "page")
 
-        Ok { page, rel } ->
-            Parser.succeed { page = page, rel = rel, url = details }
+        parsePage u =
+            u
+                |> (\url_ -> { url_ | path = "" })
+                |> Url.Parser.parse urlParser
+                |> Maybe.andThen identity
+
+        maybePage : Maybe Int
+        maybePage =
+            url
+                |> Url.fromString
+                |> Maybe.andThen parsePage
+    in
+    case maybePage of
+        Nothing ->
+            Parser.problem "invalid URL"
+
+        Just page ->
+            Parser.succeed <| WebLink (relStringToType rel page) url
 
 
-headerParser : String -> Parser HeaderMatch
-headerParser originalInputString =
-    headerParserForUrl |> Parser.andThen (parseDetails originalInputString)
-
-
-parseHeader : String -> Result (List Parser.DeadEnd) HeaderMatch
-parseHeader header =
-    Parser.run (headerParser header) header
+parseHeader : String -> Result (List Parser.DeadEnd) WebLink
+parseHeader =
+    Parser.run (initialParser |> Parser.andThen linkParser)

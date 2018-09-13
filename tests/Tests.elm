@@ -15,9 +15,18 @@ lastUrl =
     "https://api.github.com/user/193238/repos?per_page=100&page=3"
 
 
+shortUrl : String
+shortUrl =
+    "https://api.github.com/user/123/repos?page=4"
+
+
 header : String
 header =
-    "<" ++ nextUrl ++ ">; rel=\"next\", <" ++ lastUrl ++ ">; rel=\"last\""
+    String.join ", "
+        [ "<" ++ nextUrl ++ ">; rel=\"next\""
+        , "<" ++ lastUrl ++ ">; rel=\"last\""
+        , "<" ++ shortUrl ++ ">; rel=\"prev\""
+        ]
 
 
 suite : Test
@@ -31,5 +40,6 @@ suite =
                 Expect.equal (LinkHeader.parse header)
                     [ LinkHeader.WebLink (RelNext 2) nextUrl
                     , LinkHeader.WebLink (RelLast 3) lastUrl
+                    , LinkHeader.WebLink (RelPrev 4) shortUrl
                     ]
         ]
